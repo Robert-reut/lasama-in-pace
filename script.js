@@ -16,9 +16,9 @@ const PLAYER_SPEED = 2.4; // tiles per second
 const BULLET_SPEED = 8; // tiles per second
 
 const WEAPONS = {
-  awp: { name: 'AWP', maxAmmo: 5, reloadTime: 2200, fireRate: 700, damage: 2 },
-  m4a1s: { name: 'M4A1S', maxAmmo: 30, reloadTime: 1500, fireRate: 120, damage: 1 },
-  ak47: { name: 'AK-47', maxAmmo: 30, reloadTime: 1700, fireRate: 140, damage: 1.25 }
+  awp: { name: 'AWP', maxAmmo: 5, reloadTime: 2200, fireRate: 700, damage: 3 },
+  m4a1s: { name: 'M4A1S', maxAmmo: 30, reloadTime: 1500, fireRate: 120, damage: 1.35 },
+  ak47: { name: 'AK-47', maxAmmo: 30, reloadTime: 1700, fireRate: 140, damage: 1.5 }
 };
 
 const map = Array(GRID_HEIGHT).fill('.'.repeat(GRID_WIDTH));
