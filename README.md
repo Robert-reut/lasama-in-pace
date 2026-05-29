@@ -15,15 +15,21 @@ Controls:
 - Goal: eliminate all enemies and reach the objective
 
 ## Game mechanics
-- **Enemy health**: Each enemy has 100 HP
-- **Weapon balance**: M4A1S requires 15 bullets to kill (each bullet ~6.67 dmg), AWP ~7-8 shots, AK-47 ~12 shots
-- **Headshots**: 6.08% chance per shot to land a headshot (2.5x damage multiplier)
-- **Hit indicators**: Damage numbers float up when you hit an enemy, with special "★ HEADSHOT ★" text for critical hits
+- **Enemy types**:
+  - Green (Weak): 60 HP, slower
+  - Yellow (Medium): 100 HP, standard
+  - Red (Strong): 150 HP, faster
+- **Weapon balance**: M4A1S requires 15 bullets to kill, AWP ~7-8 shots, AK-47 ~12 shots
+- **Headshots**: 6.08% chance per shot (4x damage multiplier)
+- **Hit indicators**: Damage numbers float up, special "★ HEADSHOT ★" text for critical hits
 - **Health bars**: Enemy health bars appear above their heads
+- **Enemy AI**: Enemies move toward player and shoot back
+- **Respawn**: Enemies respawn 5 seconds after being killed
 
 ## Notes
-- There are no walls in this mode: it is an open field.
-- Enemies deal damage over multiple hits instead of one-shotting.
+- Open field gameplay with no walls
+- Enemies deal progressive damage over multiple hits
+- Enemy bullets are slower than player bullets
 
 ## Files
 

@@ -50,13 +50,14 @@ const player = {
 let currentWeapon = WEAPONS.m4a1s;
 
 const enemies = [
-  { x: 12.5, y: 2.5, radius: 0.24, health: 100, maxHealth: 100, alive: true, targetCooldown: 0 },
-  { x: 12.5, y: 6.5, radius: 0.24, health: 100, maxHealth: 100, alive: true, targetCooldown: 0 },
-  { x: 8.5, y: 9.5, radius: 0.24, health: 100, maxHealth: 100, alive: true, targetCooldown: 0 }
+  { x: 12.5, y: 2.5, radius: 0.24, type: 'weak', health: 60, maxHealth: 60, alive: true, targetCooldown: 0, lastShot: 0, respawnTimer: 0, spawnPoint: { x: 12.5, y: 2.5 } },
+  { x: 12.5, y: 6.5, radius: 0.24, type: 'medium', health: 100, maxHealth: 100, alive: true, targetCooldown: 0, lastShot: 0, respawnTimer: 0, spawnPoint: { x: 12.5, y: 6.5 } },
+  { x: 8.5, y: 9.5, radius: 0.24, type: 'strong', health: 150, maxHealth: 150, alive: true, targetCooldown: 0, lastShot: 0, respawnTimer: 0, spawnPoint: { x: 8.5, y: 9.5 } }
 ];
 
 const objective = { x: 14.5, y: 10.5, radius: 0.3 };
 let bullets = [];
+let enemyBullets = [];
 let hitIndicators = [];
 let keysPressed = {};
 let mouse = { x: 384, y: 288 };
@@ -66,7 +67,13 @@ let lastFrameTime = 0;
 
 const HEADSHOT_CHANCE = 0.0608;
 const BODY_DAMAGE = 100 / 15;
-const HEADSHOT_MULTIPLIER = 2.5;
+const HEADSHOT_MULTIPLIER = 4;
+
+const ENEMY_TYPES = {
+  weak: { health: 60, speed: 0.8, shootRate: 2000, damage: 0.8, color: '#90EE90' },
+  medium: { health: 100, speed: 1.2, shootRate: 1500, damage: 1, color: '#FFD700' },
+  strong: { health: 150, speed: 1.4, shootRate: 1000, damage: 1.3, color: '#FF6347' }
+};
 
 function canMove(x, y, radius) {
   return x - radius >= 0 && x + radius <= GRID_WIDTH && y - radius >= 0 && y + radius <= GRID_HEIGHT;
@@ -120,7 +127,8 @@ function drawPlayer() {
 function drawEnemies() {
   enemies.forEach((enemy) => {
     if (!enemy.alive) return;
-    drawCircle(enemy, colors.enemy);
+    const enemyType = ENEMY_TYPES[enemy.type];
+    drawCircle(enemy, enemyType.color);
     const healthPercent = enemy.health / enemy.maxHealth;
     const barWidth = enemy.radius * TILE_SIZE * 1.8;
     const barHeight = 4;
@@ -147,6 +155,21 @@ function drawBullets() {
     ctx.fillStyle = colors.bullet;
     ctx.beginPath();
     ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  enemyBullets.forEach((bullet) => {
+    const x = bullet.x * TILE_SIZE;
+    const y = bullet.y * TILE_SIZE;
+    const trailLength = Math.max(6, bullet.life * 20);
+    ctx.strokeStyle = 'rgba(255, 100, 100, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x - bullet.dx * trailLength, y - bullet.dy * trailLength);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.fillStyle = '#ff6464';
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 }
@@ -202,7 +225,7 @@ function draw() {
   drawPlayer();
   drawCrosshair();
   if (player.hitCooldown > 0) {
-    ctx.fillStyle = colors.hit;
+    ctx.fillStyle = 'rgba(255, 80, 80, 0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 }
@@ -239,9 +262,28 @@ function updateBullets(dt) {
         const damage = isHeadshot ? bullet.baseDamage * HEADSHOT_MULTIPLIER : bullet.baseDamage;
         enemy.health -= damage;
         hitIndicators.push({ x: enemy.x, y: enemy.y - 0.3, damage, isHeadshot, life: 0.5 });
-        if (enemy.health <= 0) enemy.alive = false;
+        if (enemy.health <= 0) {
+          enemy.alive = false;
+          enemy.respawnTimer = 5000;
+        }
         return false;
       }
+    }
+    return bullet.life > 0;
+  }).map((bullet) => ({ ...bullet, life: bullet.life - dt }));
+  
+  enemyBullets = enemyBullets.filter((bullet) => {
+    bullet.x += bullet.dx * BULLET_SPEED * 0.7 * dt;
+    bullet.y += bullet.dy * BULLET_SPEED * 0.7 * dt;
+    if (bullet.x < 0 || bullet.x > GRID_WIDTH || bullet.y < 0 || bullet.y > GRID_HEIGHT) return false;
+    const dist = Math.hypot(bullet.x - player.x, bullet.y - player.y);
+    if (dist < player.radius + 0.12 && player.hitCooldown <= 0) {
+      player.health -= bullet.damage;
+      player.hitCooldown = 800;
+      if (player.health <= 0) {
+        endGame(false, 'You were eliminated!');
+      }
+      return false;
     }
     return bullet.life > 0;
   }).map((bullet) => ({ ...bullet, life: bullet.life - dt }));
@@ -253,32 +295,53 @@ function getEnemiesAlive() {
 
 function updateEnemies(dt) {
   enemies.forEach((enemy) => {
-    if (!enemy.alive) return;
+    if (!enemy.alive) {
+      enemy.respawnTimer -= dt * 1000;
+      if (enemy.respawnTimer <= 0) {
+        enemy.alive = true;
+        enemy.health = enemy.maxHealth;
+        enemy.x = enemy.spawnPoint.x;
+        enemy.y = enemy.spawnPoint.y;
+        enemy.targetCooldown = 0;
+        enemy.lastShot = 0;
+      }
+      return;
+    }
+    
+    const enemyType = ENEMY_TYPES[enemy.type];
     enemy.targetCooldown -= dt * 1000;
     const dx = player.x - enemy.x;
     const dy = player.y - enemy.y;
     const dist = Math.hypot(dx, dy);
-    const speed = 1.2;
+    
     if (dist < 5 && enemy.targetCooldown <= 0) {
-      const vx = (dx / dist) * speed * dt;
-      const vy = (dy / dist) * speed * dt;
+      const vx = (dx / dist) * enemyType.speed * dt;
+      const vy = (dy / dist) * enemyType.speed * dt;
       if (canMove(enemy.x + vx, enemy.y, enemy.radius)) enemy.x += vx;
       if (canMove(enemy.x, enemy.y + vy, enemy.radius)) enemy.y += vy;
-      enemy.targetCooldown = 0.35;
+      enemy.targetCooldown = 0.3;
+      
+      if (Date.now() - enemy.lastShot > enemyType.shootRate) {
+        const bulletDx = dx / dist;
+        const bulletDy = dy / dist;
+        enemyBullets.push({ x: enemy.x + bulletDx * 0.4, y: enemy.y + bulletDy * 0.4, dx: bulletDx, dy: bulletDy, life: 2, damage: enemyType.damage });
+        enemy.lastShot = Date.now();
+      }
     } else if (enemy.targetCooldown <= 0) {
       const direction = Math.random() < 0.5 ? 1 : -1;
       if (Math.random() < 0.5) {
-        const vx = direction * 0.12 * dt;
+        const vx = direction * 0.08 * dt;
         if (canMove(enemy.x + vx, enemy.y, enemy.radius)) enemy.x += vx;
       } else {
-        const vy = direction * 0.12 * dt;
+        const vy = direction * 0.08 * dt;
         if (canMove(enemy.x, enemy.y + vy, enemy.radius)) enemy.y += vy;
       }
       enemy.targetCooldown = 1.2;
     }
+    
     const collision = Math.hypot(player.x - enemy.x, player.y - enemy.y);
     if (collision < player.radius + enemy.radius + 0.05 && player.hitCooldown <= 0) {
-      player.health -= 1;
+      player.health -= 2;
       player.hitCooldown = 1000;
       if (player.health <= 0) {
         endGame(false, 'Eliminated by enemy');
@@ -359,8 +422,8 @@ function gameLoop(timestamp) {
     player.hitCooldown = Math.max(0, player.hitCooldown - delta);
     checkReload();
     updateHUD();
-    const enemiesLeft = getEnemiesAlive();
-    if (enemiesLeft === 0 && Math.hypot(player.x - objective.x, player.y - objective.y) < objective.radius + player.radius) {
+    const aliveEnemies = enemies.filter((e) => e.alive);
+    if (aliveEnemies.length === 0 && Math.hypot(player.x - objective.x, player.y - objective.y) < objective.radius + player.radius) {
       endGame(true, 'Round won!');
     }
   }
@@ -378,14 +441,17 @@ function resetGame() {
   player.reloading = false;
   player.hitCooldown = 0;
   bullets = [];
+  enemyBullets = [];
   hitIndicators = [];
-  enemies.forEach((enemy, index) => {
-    const spawn = [{ x: 12.5, y: 2.5 }, { x: 12.5, y: 6.5 }, { x: 8.5, y: 9.5 }][index];
+  enemies.forEach((enemy) => {
+    const spawn = enemy.spawnPoint;
     enemy.x = spawn.x;
     enemy.y = spawn.y;
-    enemy.health = 100;
+    enemy.health = enemy.maxHealth;
     enemy.alive = true;
     enemy.targetCooldown = 0;
+    enemy.lastShot = 0;
+    enemy.respawnTimer = 0;
   });
   startTime = null;
   lastFrameTime = 0;
