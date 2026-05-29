@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Counter Strike 2D</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <h1>Counter Strike 2D</h1>
+      <p>WASD to move, mouse to aim, click to shoot. Eliminate all enemies.</p>
+    </header>
+
+    <section class="game-panel">
+      <canvas id="gameCanvas" width="768" height="576"></canvas>
+      <div class="status-panel">
+        <div>Enemies left: <span id="enemyCount">0</span></div>
+        <div>Health: <span id="healthCount">3</span></div>
+        <div>Weapon: <span id="weaponName">M4A1S</span></div>
+        <div>Ammo: <span id="ammoCount">0</span></div>
+        <div>Time: <span id="time">0</span>s</div>
+        <div>State: <span id="gameState">Ready</span></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button id="restartButton">Restart Round</button>
+      <select id="weaponSelect" aria-label="Select weapon">
+        <option value="awp">AWP</option>
+        <option value="m4a1s" selected>M4A1S</option>
+        <option value="ak47">AK-47</option>
+      </select>
+      <div class="legend">
+        <div><span class="tile player"></span> Player</div>
+        <div><span class="tile enemy"></span> Enemy</div>
+        <div><span class="tile objective"></span> Objective</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

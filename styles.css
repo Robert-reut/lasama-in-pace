@@ -1,0 +1,145 @@
+:root {
+  --bg: #071017;
+  --panel: #111b24;
+  --text: #d9e7ff;
+  --accent: #4ad994;
+  --danger: #ff5261;
+  --wall: #294051;
+  --floor: #11212f;
+  --floor-alt: #142a38;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #10293c 0%, #071017 65%);
+  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.wrapper {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  margin: 0 0 0.3rem;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+p {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.game-panel {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: start;
+}
+
+canvas {
+  width: 100%;
+  max-width: 100%;
+  border: 6px solid rgba(74, 217, 148, 0.18);
+  border-radius: 18px;
+  background: radial-gradient(circle at top left, rgba(74, 217, 148, 0.08), transparent 40%),
+    var(--bg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  background: rgba(11, 24, 38, 0.9);
+  padding: 1.1rem;
+  border-radius: 18px;
+  min-width: 230px;
+}
+
+.status-panel div {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+#gameState {
+  font-weight: 700;
+}
+
+.controls {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+button, select {
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 1.2rem;
+  background: var(--accent);
+  color: #061315;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 100ms ease, background 150ms ease;
+}
+
+button:hover,
+select:hover {
+  transform: translateY(-1px);
+  background: #3bc887;
+}
+
+select {
+  min-width: 165px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+}
+
+.legend div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.legend .tile {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend .player { background: #4ad994; }
+.legend .enemy { background: #ff5261; }
+.legend .wall { background: var(--wall); }
+.legend .objective { background: #ffd166; }
+
+@media (max-width: 720px) {
+  .game-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .status-panel {
+    min-width: auto;
+  }
+}
